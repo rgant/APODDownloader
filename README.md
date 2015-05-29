@@ -1,2 +1,2 @@
 # APODDownloader
-Download the Astronomy Picture of the Day Every Day, Keeping only the most recent 100
+Download the Astronomy Picture of the Day every day, keeping only the most recent 100 images. For use in a screensaver and wallpaper folder.
