@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 """
 Downloads the Astronomy Picture of the Day (http://apod.nasa.gov/apod), storing
 it into a particular path using a sortable YYYYMMDD date string. Also removes
@@ -7,14 +7,16 @@ any pictures downloaded from a day more than 100 days ago.
 import datetime
 import os
 import re
-import urllib
+import urllib.request
+
 
 TODAY = datetime.date.today()
 CHNG_DELTA = datetime.timedelta(days=1)
 FILE_BASE = '/Users/rgant/Pictures/APOD'
 
-def cleanup_old_files():
-    """ Clean up the older files, find the newest file """
+
+def cleanup_old_files() -> datetime.date:
+    """Clean up the older files, find the newest file."""
 
     # Get a list of the currently downloaded APODs
     file_list = os.listdir(FILE_BASE)
@@ -23,7 +25,7 @@ def cleanup_old_files():
     cutoff_str = cutoff_date.strftime('%Y%m%d')
 
     # date string of the most recently downloaded file
-    most_recent = 0
+    most_recent = ''
 
     for filename in file_list:
         # strip off the beginning date portion of the file name
@@ -40,18 +42,19 @@ def cleanup_old_files():
 
     # Convert the most recent APOD file date to a datetime object
     if most_recent:
-        curr_date = datetime.date(int(most_recent[0:4]), int(most_recent[4:6]),
-                                  int(most_recent[6:8]))
+        curr_date = datetime.date(
+            int(most_recent[0:4]), int(most_recent[4:6]), int(most_recent[6:8])
+        )
     else:
         curr_date = cutoff_date
 
     return curr_date
 
-def get_latest_images(curr_date):
-    """ Download the APOD image for each day. """
+
+def get_latest_images(curr_date: datetime.date) -> None:
+    """Download the APOD image for each day."""
     url_base = 'http://apod.nasa.gov/apod'
-    img_regex = re.compile('<a href="(image/[^"]+)',
-                           re.IGNORECASE | re.MULTILINE)
+    img_regex = re.compile(r'<a href="(image/[^"]+)', re.IGNORECASE | re.MULTILINE)
 
     # Starting from the day after the most recently downloaded APOD file until
     # today download the new APOD images.
@@ -64,9 +67,10 @@ def get_latest_images(curr_date):
         file_date_str = curr_date.strftime('%Y%m%d')
 
         # URL for the APOD page
-        html_url = url_base + '/ap' + url_date_str + '.html'
+        html_url = f'{url_base}/ap{url_date_str}.html'
         # Download the page into a string
-        html_pg = urllib.urlopen(html_url).read()
+        with urllib.request.urlopen(html_url) as response:
+            html_pg = response.read().decode()
 
         # Search for the anchor tag to the big image
         match = img_regex.search(html_pg)
@@ -75,14 +79,18 @@ def get_latest_images(curr_date):
 
         img_url = match.group(1)
         img_file_nm = os.path.basename(img_url)
-        urllib.urlretrieve(url_base + '/' + img_url,
-                           FILE_BASE + '/' + file_date_str + '-' + img_file_nm)
+        urllib.request.urlretrieve(
+            f'{url_base}/{img_url}',
+            f'{FILE_BASE}/{file_date_str}-{img_file_nm}',
+        )
 
-def main():
-    """ First, cleanup old files in the FILE_BASE directory. Then download any
-    new images from APOD website. """
+
+def main() -> None:
+    """First, cleanup old files in the FILE_BASE directory. Then download any
+    new images from APOD website."""
     curr_date = cleanup_old_files()
     get_latest_images(curr_date)
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     main()
