@@ -5,8 +5,10 @@ it into a particular path using a sortable YYYYMMDD date string. Also removes
 any pictures downloaded from a day more than 100 days ago.
 """
 import datetime
+import logging
 import os
 import re
+import urllib.parse
 import urllib.request
 
 
@@ -40,7 +42,7 @@ def cleanup_old_files() -> datetime.date:
         if f_date > most_recent and f_date > cutoff_str:
             most_recent = f_date
 
-    # Convert the most recent APOD file date to a datetime object
+    # Convert the most recent APOD file date to a `datetime` object
     if most_recent:
         curr_date = datetime.date(
             int(most_recent[0:4]), int(most_recent[4:6]), int(most_recent[6:8])
@@ -53,6 +55,7 @@ def cleanup_old_files() -> datetime.date:
 
 def get_latest_images(curr_date: datetime.date) -> None:
     """Download the APOD image for each day."""
+    logger = logging.getLogger(__name__)
     url_base = 'http://apod.nasa.gov/apod'
     img_regex = re.compile(r'<a href="(image/[^"]+)', re.IGNORECASE | re.MULTILINE)
 
@@ -62,7 +65,7 @@ def get_latest_images(curr_date: datetime.date) -> None:
         # Step to next date
         curr_date += CHNG_DELTA
 
-        # Formated dates used for the APOD URL & when saving APOD file
+        # Formatted dates used for the APOD URL & when saving APOD file
         url_date_str = curr_date.strftime('%y%m%d')
         file_date_str = curr_date.strftime('%Y%m%d')
 
@@ -77,8 +80,10 @@ def get_latest_images(curr_date: datetime.date) -> None:
         if not match:
             continue  # Image URL not found, so skip this date
 
-        img_url = match.group(1)
+        img_url = urllib.parse.quote(match.group(1))
         img_file_nm = os.path.basename(img_url)
+        logger.info('REQUEST: %r', f'{url_base}/{img_url}')
+        logger.info('OUTPUT: %r', f'{FILE_BASE}/{file_date_str}-{img_file_nm}')
         urllib.request.urlretrieve(
             f'{url_base}/{img_url}',
             f'{FILE_BASE}/{file_date_str}-{img_file_nm}',
@@ -86,11 +91,14 @@ def get_latest_images(curr_date: datetime.date) -> None:
 
 
 def main() -> None:
-    """First, cleanup old files in the FILE_BASE directory. Then download any
-    new images from APOD website."""
+    """
+    First, cleanup old files in the FILE_BASE directory. Then download any new images from APOD
+    website.
+    """
     curr_date = cleanup_old_files()
     get_latest_images(curr_date)
 
 
 if __name__ == '__main__':
+    logging.basicConfig()#level=logging.INFO)
     main()

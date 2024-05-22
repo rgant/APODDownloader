@@ -6,7 +6,7 @@
 	<string>name.robgant.apod_downloader</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/Users/rgant/bin/APODDownloader.py</string>
+		<string>/Users/rgant/bin/apod_downloader.py</string>
 	</array>
 	<key>StartCalendarInterval</key>
 	<dict>
