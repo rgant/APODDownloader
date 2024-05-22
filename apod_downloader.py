@@ -82,12 +82,11 @@ def get_latest_images(curr_date: datetime.date) -> None:
 
         img_url = urllib.parse.quote(match.group(1))
         img_file_nm = os.path.basename(img_url)
-        logger.info('REQUEST: %r', f'{url_base}/{img_url}')
-        logger.info('OUTPUT: %r', f'{FILE_BASE}/{file_date_str}-{img_file_nm}')
-        urllib.request.urlretrieve(
-            f'{url_base}/{img_url}',
-            f'{FILE_BASE}/{file_date_str}-{img_file_nm}',
-        )
+        request_url = f'{url_base}/{img_url}'
+        out_path = f'{FILE_BASE}/{file_date_str}-{img_file_nm}'
+        logger.info('REQUEST: %r', request_url)
+        logger.info('OUTPUT: %r', out_path)
+        urllib.request.urlretrieve(request_url, out_path)
 
 
 def main() -> None:
