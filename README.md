@@ -34,7 +34,7 @@ Setup `pipenv`:
 pip install --user pipenv
 ```
 
-> Note: # If you have `PIP_REQUIRE_VIRTUALENV` then you will want to set this to
+> Note: If you have `PIP_REQUIRE_VIRTUALENV` then you will want to set this to
 > false for this install to be outside of virtual environments.
 
 Update your PATH to include `~/.local/bin` as per [documentation](https://pipenv.pypa.io/en/latest/installation/#preferred-installation-of-pipenv)
