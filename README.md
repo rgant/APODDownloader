@@ -19,7 +19,7 @@ You need to open a new shell after your `.bash_profile` (or whatever) changes.
 
 For Silicon Macs: include `export PYENCHANT_LIBRARY_PATH=/opt/homebrew/lib/libenchant-2.2.dylib`
 in your `.bash_profile` (or whatever) file to make sure that `pylint` works properly.
-Without it you would encounter a `pylint` error
+Without it you would encounter a `pylint` error:
 `argument --spelling-dict: invalid choice: 'en_US' (choose from '')`.
 
 Setup python:
@@ -37,7 +37,7 @@ pip install --user pipenv
 > Note: If you have `PIP_REQUIRE_VIRTUALENV` then you will want to set this to
 > false for this install to be outside of virtual environments.
 
-Update your PATH to include `~/.local/bin` as per [documentation](https://pipenv.pypa.io/en/latest/installation/#preferred-installation-of-pipenv)
+Update your PATH to include `~/.local/bin` as per [documentation](https://pipenv.pypa.io/en/latest/installation/#preferred-installation-of-pipenv).
 
 Sync dependencies:
 
