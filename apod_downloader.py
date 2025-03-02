@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 """
 Downloads the Astronomy Picture of the Day (http://apod.nasa.gov/apod), storing
 it into a particular path using a sortable YYYYMMDD date string. Also removes
