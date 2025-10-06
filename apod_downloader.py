@@ -1,15 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 """
 Downloads the Astronomy Picture of the Day (http://apod.nasa.gov/apod), storing
 it into a particular path using a sortable YYYYMMDD date string. Also removes
 any pictures downloaded from a day more than 100 days ago.
 """
 import datetime
+import http.client
 import logging
 import os
 import re
 import urllib.parse
 import urllib.request
+import urllib.error
 
 
 TODAY = datetime.date.today()
@@ -71,7 +73,9 @@ def get_latest_images(curr_date: datetime.date) -> None:
 
         # URL for the APOD page
         html_url = f'{url_base}/ap{url_date_str}.html'
+        logger.info('PAGE: %r', html_url)
         # Download the page into a string
+        response: http.client.HTTPResponse
         with urllib.request.urlopen(html_url) as response:
             html_pg = response.read().decode()
 
@@ -82,11 +86,15 @@ def get_latest_images(curr_date: datetime.date) -> None:
 
         img_url = urllib.parse.quote(match.group(1))
         img_file_nm = os.path.basename(img_url)
-        request_url = f'{url_base}/{img_url}'
-        out_path = f'{FILE_BASE}/{file_date_str}-{img_file_nm}'
-        logger.info('REQUEST: %r', request_url)
-        logger.info('OUTPUT: %r', out_path)
-        urllib.request.urlretrieve(request_url, out_path)
+        logger.info('REQUEST: %r', f'{url_base}/{img_url}')
+        logger.info('OUTPUT: %r', f'{FILE_BASE}/{file_date_str}-{img_file_nm}')
+        try:
+            _ = urllib.request.urlretrieve(
+                f'{url_base}/{img_url}',
+                f'{FILE_BASE}/{file_date_str}-{img_file_nm}',
+            )
+        except urllib.error.HTTPError as e:
+            logger.exception('Image retrieval failed: %r', e)
 
 
 def main() -> None:
@@ -99,5 +107,5 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    logging.basicConfig()#level=logging.INFO)
+    logging.basicConfig(level=logging.INFO)
     main()
