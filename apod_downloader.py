@@ -4,6 +4,7 @@ Downloads the Astronomy Picture of the Day (http://apod.nasa.gov/apod), storing
 it into a particular path using a sortable YYYYMMDD date string. Also removes
 any pictures downloaded from a day more than 100 days ago.
 """
+import codecs
 import datetime
 import http.client
 import logging
@@ -55,6 +56,27 @@ def cleanup_old_files() -> datetime.date:
     return curr_date
 
 
+def _decode_html(raw: bytes) -> str:
+    """
+    Decode an APOD page to text, detecting the encoding from the bytes rather
+    than the HTTP headers. The server reports ``charset=UTF-8`` even for pages
+    saved as UTF-16, so the response content is the only trustworthy signal.
+
+    APOD pages carry no ``<meta charset>``; they are UTF-8, or occasionally
+    UTF-16 flagged by a byte-order mark. A leading BOM selects the encoding,
+    otherwise the page is UTF-8.
+    """
+    if raw.startswith(codecs.BOM_UTF8):
+        return raw.decode('utf-8-sig')
+    if raw.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
+        # ``utf-16`` reads the BOM to pick the endianness and strips it.
+        return raw.decode('utf-16')
+
+    # `errors='replace'` keeps one unexpected page from aborting the whole run;
+    # the image link extracted downstream is pure ASCII and survives intact.
+    return raw.decode('utf-8', errors='replace')
+
+
 def get_latest_images(curr_date: datetime.date) -> None:
     """Download the APOD image for each day."""
     logger = logging.getLogger(__name__)
@@ -77,7 +99,7 @@ def get_latest_images(curr_date: datetime.date) -> None:
         # Download the page into a string
         response: http.client.HTTPResponse
         with urllib.request.urlopen(html_url) as response:
-            html_pg = response.read().decode()
+            html_pg = _decode_html(response.read())
 
         # Search for the anchor tag to the big image
         match = img_regex.search(html_pg)
@@ -107,5 +129,5 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig()#level=logging.INFO)
     main()
