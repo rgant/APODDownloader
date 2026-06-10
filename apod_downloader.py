@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-Downloads the Astronomy Picture of the Day (http://apod.nasa.gov/apod), storing
+Downloads the Astronomy Picture of the Day (https://apod.nasa.gov/apod), storing
 it into a particular path using a sortable YYYYMMDD date string. Also removes
 any pictures downloaded from a day more than 100 days ago.
 """
@@ -32,9 +32,15 @@ def cleanup_old_files() -> datetime.date:
     # date string of the most recently downloaded file
     most_recent = ''
 
+    # APOD files are named `YYYYMMDD-...`; anything else in the directory (e.g. a
+    # macOS .DS_Store) is ignored so it is never deleted or misread as a date.
+    name_regex = re.compile(r'^(\d{8})-')
+
     for filename in file_list:
-        # strip off the beginning date portion of the file name
-        f_date = filename.partition('-')[0]
+        name_match = name_regex.match(filename)
+        if not name_match:
+            continue
+        f_date = name_match.group(1)
 
         # if this file is older than the cut off date, delete it
         # integer comparison works for sortable YYYYMMDD date strings.
@@ -80,7 +86,7 @@ def _decode_html(raw: bytes) -> str:
 def get_latest_images(curr_date: datetime.date) -> None:
     """Download the APOD image for each day."""
     logger = logging.getLogger(__name__)
-    url_base = 'http://apod.nasa.gov/apod'
+    url_base = 'https://apod.nasa.gov/apod'
     img_regex = re.compile(r'<a href="(image/[^"]+)', re.IGNORECASE | re.MULTILINE)
 
     # Starting from the day after the most recently downloaded APOD file until
@@ -98,8 +104,14 @@ def get_latest_images(curr_date: datetime.date) -> None:
         logger.info('PAGE: %r', html_url)
         # Download the page into a string
         response: http.client.HTTPResponse
-        with urllib.request.urlopen(html_url) as response:
-            html_pg = _decode_html(response.read())
+        try:
+            with urllib.request.urlopen(html_url) as response:
+                html_pg = _decode_html(response.read())
+        except urllib.error.URLError as e:
+            # A page may be missing (e.g. today's is not posted yet) or the
+            # network may hiccup; skip this date rather than abort the run.
+            logger.warning('Page retrieval failed: %r', e)
+            continue
 
         # Search for the anchor tag to the big image
         match = img_regex.search(html_pg)
