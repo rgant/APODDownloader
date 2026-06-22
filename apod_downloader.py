@@ -87,7 +87,9 @@ def get_latest_images(curr_date: datetime.date) -> None:
     """Download the APOD image for each day."""
     logger = logging.getLogger(__name__)
     url_base = 'https://apod.nasa.gov/apod'
-    img_regex = re.compile(r'<a href="(image/[^"]+)', re.IGNORECASE | re.MULTILINE)
+    # Match only the anchor that wraps the displayed `<img>`, which is the main
+    # image of the day.
+    img_regex = re.compile(r'<a href="(image/[^"]+)"[^>]*>\s*<img', re.IGNORECASE | re.DOTALL)
 
     # Starting from the day after the most recently downloaded APOD file until
     # today download the new APOD images.
